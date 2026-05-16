@@ -5,7 +5,7 @@ Here, all the logic for floppy disks driver functions reside.
 Better take notes, would ya?
 */
 
-void initializeFloppyPins() {
+void initializeFloppyPins() { // We just initialize all pins
     pinMode(FLOPPY_MOTOR_ON, OUTPUT);
     pinMode(FLOPPY_DRIVE_SEL, OUTPUT);
     pinMode(FLOPPY_DIRECTION, OUTPUT);
@@ -65,10 +65,11 @@ void seekTrack(int targetTrack) {
     int steps = abs(targetTrack - (int)currentTrack);
 
     for (int i = 0; i < steps; i++) {
+        // We move the head until we reached the desired track
         digitalWrite(FLOPPY_STEP, LOW);
         delayMicroseconds(10);
         digitalWrite(FLOPPY_STEP, HIGH);
-        delay(6);
+        delay(6); // Needs a small delay
     }
     currentTrack = targetTrack;
 }

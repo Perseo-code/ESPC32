@@ -23,9 +23,9 @@ volatile int rotations = 0;
 volatile uint32_t currentTrack;
 void initializeFloppyPins(); // Executes pinMode internally
 
-void seekTrack(int targetTrack);
-void readSector(int sector, uint8_t* outputBuffer);
-void motorOn();
-void calibrate();
+void seekTrack(int targetTrack); // Changes tracks
+void readSector(int sector, uint8_t* outputBuffer); // Reads sectors (Each one is 512 bytes)
+void motorOn(); // Starts the drive motor
+void calibrate(); // Changes to track 0
 
 #endif
