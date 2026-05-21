@@ -2,6 +2,7 @@
 #define FLOPPYDRIVER
 
 #include "Config.h"
+#include "Auxiliary.h"
 /*
 Wow, man, look at this! A driver for floppy disk!
 Yes, I thought of it and this is what made me start doing this project.
@@ -19,12 +20,13 @@ static CBuffer cb;
 volatile uint32_t lastTime;
 volatile uint32_t rotationTime;
 volatile uint32_t lastRotationTime;
+volatile uint32_t lastRead;
 volatile int rotations = 0;
 volatile uint32_t currentTrack;
 void initializeFloppyPins(); // Executes pinMode internally
 
 void seekTrack(int targetTrack); // Changes tracks
-void readSector(int sector, uint8_t* outputBuffer); // Reads sectors (Each one is 512 bytes)
+bool readSector(int sector, uint8_t* outputBuffer); // Reads sectors (Each one is 512 bytes)
 void motorOn(); // Starts the drive motor
 void calibrate(); // Changes to track 0
 

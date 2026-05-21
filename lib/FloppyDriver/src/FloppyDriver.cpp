@@ -75,13 +75,60 @@ void seekTrack(int targetTrack) {
 }
 
 
-static const uint32_t timeout = 5000;
 
-void readSector(int sector, uint8_t* outputBuffer) {
+static const uint32_t timeout = 5000;
+int state = 0;
+int bytesRead = 0;
+int foundSector = -1;
+void processByte(uint8_t currentByte, int targetSector, uint8_t* outputBuffer) {
+    switch (state) {
+        
+        case 0:
+            if (currentByte == 0xA1) { 
+                state = 1;       // Found the mark.
+                bytesRead = 0;  // Reset the byte counter for the head
+            }
+            break;
+
+        case 1:
+            // The standard header records: [Track, Side, Sector Number, Size]
+            if (bytesRead == 2) { // The third byte of the header is the sector number
+                foundSector = currentByte;
+            }
+            
+            bytesRead++;
+            
+            if (bytesRead == 4) { // The header has already passed (4 bytes)
+                if (foundSector == targetSector) {
+                    state = 2;       // It's the sector we were looking for. Now saving data
+                    bytesRead = 0;  // Reset the counter to fill all 512 bytes
+                } else {
+                    state = 0;       // It wasn't the sector we wanted. Now we'll look for the next 0xA1
+                }
+            }
+            break;
+
+        case 2:
+            // The firsts bytes after the header are usually another data sync mark (Data AM).
+            // Once the pure data starts, we overturn it into the OS buffer:
+            if (bytesRead >= 4) { // Skip the small bytes of initial separation if there was
+                outputBuffer[bytesRead - 4] = currentByte; 
+            }
+            
+            bytesRead++;
+            
+            if (bytesRead >= 516) { // 512 bytes of data + 4 data header
+                state = 3; // Reading completed successfully
+            }
+            break;
+    }
+}
+
+bool readSector(int sector, uint8_t* outputBuffer) {
     rotations = 0;
     uint32_t time = millis();
     while (rotations == 0) {
-        if (time >= timeout) return; // Timeout
+        if ((millis() - time) >= timeout) return; // Timeout
     }
 
     cb.readIndex = cb.writeIndex;
@@ -99,7 +146,13 @@ void readSector(int sector, uint8_t* outputBuffer) {
             
             // MFM decoding
             // Here we process the interval to convert it into bits
-            
+            if (interval >= 15 && interval < 25) {
+                if (pushBit(1)) {
+
+                }
+            }
+            if (interval >= 25 && interval < 35) {pushBit(0); pushBit(0); pushBit(1);}
+            if (interval >= 35 && interval < 45) {pushBit(0); pushBit(0); pushBit(0); pushBit(1);}
         }
-}
+    }
 }
